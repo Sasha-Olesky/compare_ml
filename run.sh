@@ -1,2 +1,2 @@
-cd /img-dl-com/
+cd /compare_ml/
 python3 server.py
