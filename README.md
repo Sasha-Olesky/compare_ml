@@ -1,10 +1,10 @@
 # install docker
-apt-get install docker.io
+sudo apt-get install docker.io
 
 # enable docker
-systemctl start docker
+sudo systemctl start docker
 
-systemctl enable docker
+sudo systemctl enable docker
 
 # docker build
 sudo docker build -t="webapi" .
