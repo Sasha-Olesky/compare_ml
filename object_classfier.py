@@ -4,17 +4,17 @@ import tensorflow as tf
 import cv2
 import json
 import base64
-
+from requests import get
 from utils import label_map_util
 from utils import visualization_utils as vis_util
 from hash_compare import *
 from ssim_compare import *
-#from surf_compare import *
 from face_compare import *
 from histogram_compare import *
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
+APACHE_DIRECTORY = '/var/www/html/'
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
 	print ('Cannot find model')
@@ -255,12 +255,13 @@ def cropImage(strImagePath):
     name = os.path.splitext(strImagePath)[0]
     strObjectImagePath = os.path.basename(name) + '_crop.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
-    directory = '/var/www/html/'
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    strFinalImagePath = directory + name + '_crop.jpg'
+    if not os.path.exists(APACHE_DIRECTORY):
+        os.makedirs(APACHE_DIRECTORY)
+    strFinalImagePath = APACHE_DIRECTORY + name + '_crop.jpg'
     os.rename(strObjectImagePath, strFinalImagePath)
-    strObjectImagePath = 'http://146.148.111.219/' + strFinalImagePath
+
+    ip_address = get('https://api.ipify.org').text
+    strObjectImagePath = 'http://' + str(ip_address) + '/' + strFinalImagePath
     return (object_name, strObjectImagePath)
 
 def getCropImage(strImagePath):
@@ -273,8 +274,7 @@ def getCropImage(strImagePath):
     data = {}
     data['crop_image'] = []
     data['crop_image'].append({
-        'image_path': str(image_path),
-        'object_name': str(object_name),
+        'image_path': str(image_path)
     })
 
     data['version'] = []
