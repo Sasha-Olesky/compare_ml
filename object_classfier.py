@@ -255,8 +255,6 @@ def cropImage(strImagePath):
     name = os.path.splitext(strImagePath)[0]
     strObjectImagePath = os.path.basename(name) + '_crop.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
-    if not os.path.exists(APACHE_DIRECTORY):
-        os.makedirs(APACHE_DIRECTORY)
     strFinalImagePath = APACHE_DIRECTORY + name + '_crop.jpg'
     os.rename(strObjectImagePath, strFinalImagePath)
 
