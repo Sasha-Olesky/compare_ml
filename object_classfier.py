@@ -14,7 +14,7 @@ from histogram_compare import *
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
-APACHE_DIRECTORY = '/var/www/html/'
+APACHE_DIRECTORY = os.environ['APACHE_PATH']
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
 	print ('Cannot find model')

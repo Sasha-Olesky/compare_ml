@@ -69,7 +69,8 @@ class GetCropImage(Resource):
 class GetCropImageView(Resource):
     def get(self):
         name = request.args.get('name')
-        redirect_url = "http://146.148.111.219/" + name
+        ip_address = get('https://api.ipify.org').text
+        redirect_url = 'http://' + str(ip_address) + '/' + name
         return redirect(redirect_url, 302)
 
 api.add_resource(ImageUpload, '/image_upload')
