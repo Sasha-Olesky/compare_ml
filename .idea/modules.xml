@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../object tracking/.idea/Computer-Vision-Experiments-master.iml" filepath="$PROJECT_DIR$/../../object tracking/.idea/Computer-Vision-Experiments-master.iml" />
+      <module fileurl="file://$USER_HOME$/Downloads/Computer-Vision-Experiments-master/.idea/Computer-Vision-Experiments-master.iml" filepath="$USER_HOME$/Downloads/Computer-Vision-Experiments-master/.idea/Computer-Vision-Experiments-master.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/src.iml" filepath="$PROJECT_DIR$/.idea/src.iml" />
+    </modules>
+  </component>
+</project>
