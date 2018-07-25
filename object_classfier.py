@@ -261,7 +261,7 @@ def cropImage(strImagePath):
     os.rename(strObjectImagePath, strFinalImagePath)
 
     ip_address = get('https://api.ipify.org').text
-    strObjectImagePath = 'http://' + str(ip_address) + strFinalImagePath
+    strObjectImagePath = 'http://' + str(ip_address) + '/' + strObjectImagePath
     return (object_name, strObjectImagePath)
 
 def getCropImage(strImagePath):

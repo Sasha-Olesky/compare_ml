@@ -19,6 +19,8 @@ RUN  pip3 install tensorflow==1.3.0 &&\
 RUN git clone https://github.com/Sasha-Olesky/compare_ml.git
 RUN cd compare_ml
 
+ENV APACHE_PATH "$APACHE_PATH:/var/www/html/"
+
 RUN chmod +x /compare_ml/run.sh
 CMD ./compare_ml/run.sh
 
