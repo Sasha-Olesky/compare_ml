@@ -2,7 +2,7 @@
 apt-get install docker.io
 
 # enable docker
-systemctl start docker
+systemctl start docker \n
 systemctl enable docker
 
 # docker build
