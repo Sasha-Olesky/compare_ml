@@ -24,7 +24,6 @@ RUN mkdir -p /var/www/html/
 ENV APACHE_PATH "$APACHE_PATH/var/www/html/"
 RUN chmod 777 -R /var/www/html/
 EXPOSE 80
-CMD service apache2 start
 
 RUN chmod +x /compare_ml/run.sh
 CMD ./compare_ml/run.sh

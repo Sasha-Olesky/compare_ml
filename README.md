@@ -12,10 +12,3 @@ sudo docker build -t="webapi" .
 # docker run
 sudo docker run -i -p 5000:5000 -t webapi
 
-# you need to find out which port to connect:
-sudo docker ps
-
-sudo docker exec -t -i mycontainer /bin/bash
-
-service apache2 start
-
