@@ -10,7 +10,7 @@ sudo systemctl enable docker
 sudo docker build -t="webapi" .
 
 # docker run
-sudo docker run -i -p 5000:5000 -p 8080:80 -t webapi
+sudo docker run -i -p 5000:5000 -t webapi
 
 # you need to find out which port to connect:
 sudo docker ps
