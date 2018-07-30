@@ -68,9 +68,9 @@ def object_detection(strImagePath):
         y1 = ymin * height
         x2 = xmax * width
         y2 = ymax * height
-        width = (xmax - xmin) * width
-        height = (ymax - ymin) * height
-        area = width * height
+        object_width = (xmax - xmin) * width
+        object_height = (ymax - ymin) * height
+        area = object_width * object_height
         if area > biggest_area:
             biggest_area = area
             object_name = name
@@ -244,9 +244,9 @@ def cropImage(strImagePath):
         y1 = ymin * height
         x2 = xmax * width
         y2 = ymax * height
-        width = (xmax - xmin) * width
-        height = (ymax - ymin) * height
-        area = width * height
+        object_width = (xmax - xmin) * width
+        object_height = (ymax - ymin) * height
+        area = object_width * object_height
         if area > biggest_area:
             biggest_area = area
             object_name = name

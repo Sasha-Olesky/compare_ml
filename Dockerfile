@@ -4,7 +4,7 @@ RUN apt-get update
 RUN apt-get install -y python3-pip git
 
 FROM python:3.5
-RUN  pip3 install tensorflow==1.3.0 &&\
+RUN  pip3 install tensorflow &&\
      pip3 install opencv-python &&\
      pip3 install flask &&\
      pip3 install flask-restful &&\
