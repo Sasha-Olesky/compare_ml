@@ -238,6 +238,7 @@ def cropImage(strImagePath):
     object_name = ''
     object_image = image_np
     height, width, channels = image_np.shape
+    exist_object = False
     for box, name in objects.items():
         ymin, xmin, ymax, xmax = box
         x1 = xmin * width
@@ -250,12 +251,102 @@ def cropImage(strImagePath):
         if area > biggest_area:
             biggest_area = area
             object_name = name
-            object_image = image_np[round(y1):round(y2), round(x1):int(x2)]
+            object_rect = (x1, x2, y1, y2)
+            exist_object = True
 
-    name = os.path.splitext(strImagePath)[0]
-    strObjectImagePath = os.path.basename(name) + '_crop.jpg'
+    if exist_object:
+        x1, x2, y1, y2 = object_rect
+        object_width = x2 - x1
+        object_height = y2 - y1
+        if object_width > width - object_width / 3 and object_height > height - object_height / 3:
+            object_image = image_np
+        else:
+            if width > object_width * 1.5 and height > object_height * 1.5:
+                average_img = image_np[0:int(y1), 0:int(x1)]
+                avg_color_per_row = np.average(average_img, axis=0)
+                avg_color = np.average(avg_color_per_row, axis=0)
+                thresh_img = cv2.inRange(image_np, (avg_color[0]-10, avg_color[1]-10, avg_color[2]-10), (avg_color[0]+10, avg_color[1]+10, avg_color[2]+10))
+                white_pixels = cv2.findNonZero(thresh_img)
+                white_pixel_cnt = 0
+                for pixel in white_pixels:
+                    white_pixel_cnt = white_pixel_cnt + 1
+                ratio = white_pixel_cnt * 100 / (width * height)
+                if ratio < 70:
+                    padding_x1 = x1
+                    padding_x2 = width - x2
+                    if object_height > object_width:
+                        scale = object_height / 3
+                    else:
+                        scale = object_width / 3
+
+                    if padding_x1 > padding_x2:
+                        crop_x1 = x1 - scale * 4
+                        crop_x2 = x2 + scale * 2
+                    else:
+                        crop_x1 = x1 - scale * 2
+                        crop_x2 = x2 + scale * 4
+                    crop_y1 = y1 - scale * 4
+                    crop_y2 = y2 + scale * 2
+                    if crop_x1 > 0 and crop_x2 < width and crop_y1 > 0 and crop_y2 < height:
+                        object_image = image_np[int(crop_y1):int(crop_y2), int(crop_x1):int(crop_x2)]
+                    else:
+                        if object_height > object_width:
+                            scale = object_height / 2
+                        else:
+                            scale = object_width / 2
+                        if padding_x1 > padding_x2:
+                            crop_x1 = x1 - scale * 3
+                            crop_x2 = x2 + scale
+                        else:
+                            crop_x1 = x1 - scale
+                            crop_x2 = x2 + scale * 3
+                        crop_y1 = y1 - scale * 2
+                        crop_y2 = y2 + scale
+                        if crop_x1 > 0 and crop_x2 < width and crop_y1 > 0 and crop_y2 < height:
+                            object_image = image_np[int(crop_y1):int(crop_y2), int(crop_x1):int(crop_x2)]
+                        else:
+                            if object_height > object_width:
+                                scale = object_height / 3
+                            else:
+                                scale = object_width / 3
+                            if padding_x1 > padding_x2:
+                                crop_x1 = x1 - scale * 4
+                                crop_x2 = x2 + scale
+                            else:
+                                crop_x1 = x1 - scale
+                                crop_x2 = x2 + scale * 4
+                            crop_y1 = y1 - scale * 1.5
+                            crop_y2 = y2 + scale
+                            if crop_x1 > 0 and crop_x2 < width and crop_y1 > 0 and crop_y2 < height:
+                                object_image = image_np[int(crop_y1):int(crop_y2), int(crop_x1):int(crop_x2)]
+                            else:
+                                crop_x1 = x1 - object_width / 4
+                                crop_x2 = x2 + object_width / 4
+                                crop_y1 = y1 - object_height / 4
+                                crop_y2 = y2 + object_height / 4
+                                if crop_x1 > 0 and crop_x2 < width and crop_y1 > 0 and crop_y2 < height:
+                                    object_image = image_np[int(crop_y1):int(crop_y2),
+                                                   int(crop_x1):int(crop_x2)]
+                                else:
+                                    object_image = image_np[int(y1):int(y2), int(x1):int(x2)]
+                else:
+                    crop_x1 = x1 - object_width / 4
+                    crop_x2 = x2 + object_width / 4
+                    crop_y1 = y1 - object_height / 4
+                    crop_y2 = y2 + object_height / 4
+                    if crop_x1 > 0 and crop_x2 < width and crop_y1 > 0 and crop_y2 < height:
+                        object_image = image_np[int(crop_y1):int(crop_y2),
+                                       int(crop_x1):int(crop_x2)]
+                    else:
+                        object_image = image_np[int(y1):int(y2), int(x1):int(x2)]
+
+            else:
+                object_image = image_np[int(y1):int(y2), int(x1):int(x2)]
+
+    cropfilename = os.path.splitext(strImagePath)[0]
+    strObjectImagePath = os.path.basename(cropfilename) + '_crop.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
-    strFinalImagePath = APACHE_DIRECTORY + name + '_crop.jpg'
+    strFinalImagePath = APACHE_DIRECTORY + cropfilename + '_crop.jpg'
     os.rename(strObjectImagePath, strFinalImagePath)
 
     ip_address = get('https://api.ipify.org').text
