@@ -29,6 +29,6 @@ def ssim_compare(img1, img2):
 
     similar = SSIM(im1).cw_ssim_value(im2) * 100
     if similar > 90:
-        return 'Same Image'
+        return ('Same Image', similar)
     else:
-        return 'Different Image'
+        return ('Different Image', similar)

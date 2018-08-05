@@ -25,10 +25,14 @@ class ImageUpload(Resource):
         file_name = file_name.replace('|', '_')
         file_name = file_name.replace('\"', '_')
 
-        urllib.request.urlretrieve(image_url, file_name)
-        jsonFile, jsonpath, imagepath = getJsonData(file_name)
-        os.remove(imagepath)
-        os.remove(jsonpath)
+        try:
+            urllib.request.urlretrieve(image_url, file_name)
+            jsonFile, jsonpath, imagepath = getJsonData(file_name)
+            os.remove(imagepath)
+            os.remove(jsonpath)
+        except:
+            jsonFile = 'cannot find image_url. please input correct url.'
+
         return jsonFile, 201
 
 class ImageCompare(Resource):
@@ -38,8 +42,20 @@ class ImageCompare(Resource):
         firstData = content['first_data']
         secondData = content['second_data']
 
-        result = image_classfier_json(firstData, secondData)
+        result, jsonpath = image_compare_server(firstData, secondData)
+        os.remove(jsonpath)
         return result, 200
+
+class ImageSimilarity(Resource):
+    def post(self):
+        content = request.get_json()
+
+        firstData = content['first_data']
+        secondData = content['second_data']
+
+        result, jsonpath = image_similar_server(firstData, secondData)
+        os.remove(jsonpath)
+        return result, 203
 
 class GetCropImage(Resource):
     def post(self):
@@ -76,6 +92,7 @@ class GetCropImageView(Resource):
 api.add_resource(ImageUpload, '/image_upload')
 api.add_resource(GetCropImage, '/image_crop')
 api.add_resource(ImageCompare, '/image_compare')
+api.add_resource(ImageSimilarity, '/image_similar')
 api.add_resource(GetCropImageView, '/')
 
 app.run(host='0.0.0.0')

@@ -24,6 +24,6 @@ def hist_compare(img1, img2):
 
     similar = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL) * 100
     if similar > 70:
-        return 'Same Image'
+        return ('Same Image', similar)
     else:
-        return 'Different Image'
+        return ('Different Image', similar)

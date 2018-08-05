@@ -4,6 +4,7 @@ import tensorflow as tf
 import cv2
 import json
 import base64
+import math
 from requests import get
 from utils import label_map_util
 from utils import visualization_utils as vis_util
@@ -14,7 +15,8 @@ from histogram_compare import *
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
-APACHE_DIRECTORY = os.environ['APACHE_PATH']
+#APACHE_DIRECTORY = os.environ['APACHE_PATH']
+APACHE_DIRECTORY = ''
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
 	print ('Cannot find model')
@@ -118,52 +120,53 @@ def getJsonData(strImagePath):
     return data, jsonfile, imagefile
 
 # compare image api
-def image_classfier(strFirstImage, strSecondImage, first_object_name, second_object_name):
+def image_compare(strFirstImage, strSecondImage, first_object_name, second_object_name):
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
-    ssim_similar = ssim_compare(strFirstImage, strSecondImage)
+    ssim_similar, ssim_value = ssim_compare(strFirstImage, strSecondImage)
     if ssim_similar == 'Same Image':
         return ssim_similar
 
     if first_object_name == '' and second_object_name == '':
-        hash_result = hash_compare(first_object_image, second_object_image)
+        hash_result, hash_val = hash_compare(first_object_image, second_object_image)
         if hash_result == 'Same Image':
-            return hist_compare(first_object_image, second_object_image)
+            hist_result, hist_val = hist_compare(first_object_image, second_object_image)
+            return hist_result
         else:
             return 'Different Image'
     elif first_object_name == second_object_name:
         if first_object_name == 'person':
             return face_compare(first_object_image, second_object_image)
         elif first_object_name == 'N/A':
-            hash_result = hash_compare(first_object_image, second_object_image)
+            hash_result, hash_val = hash_compare(first_object_image, second_object_image)
             return hash_result
         else:
-            hash_result = hash_compare(first_object_image, second_object_image)
+            hash_result, hash_val = hash_compare(first_object_image, second_object_image)
             if hash_result == 'Same Image':
-                hist_result = hist_compare(first_object_image, second_object_image)
+                hist_result, hist_val = hist_compare(first_object_image, second_object_image)
                 return hist_result
             else:
                 return hash_result
     else:
         return 'Different Image'
 
-def image_classfier_json_local(strFirstJson, strSecondJson):
+def image_compare_local(strFirstJson, strSecondJson):
     with open(strFirstJson, 'r') as f:
         firstData = json.load(f)
 
     with open(strSecondJson, 'r') as f:
         secondData = json.load(f)
 
-    return image_classfier_json(firstData, secondData)
+    return image_compare_server(firstData, secondData)
 
-def image_classfier_json(firstData, secondData):
+def image_compare_server(firstData, secondData):
     first_version_data = firstData['version'][0]
     first_version = first_version_data['version']
     second_version_data = secondData['version'][0]
     second_version = second_version_data['version']
     if first_version != second_version:
-        return createReturnJson(401, 'Json Version Error')
+        return createCompareJson(401, 'Json Version Error')
 
     first_object = firstData['object'][0]
     first_object_name = first_object['object_name']
@@ -181,16 +184,16 @@ def image_classfier_json(firstData, secondData):
     second_image = open('second.png', 'wb')
     second_image.write(second_image_decode_bytes)
 
-    compare_result = image_classfier('first.png', 'second.png', first_object_name, second_object_name)
-    os.remove('first.png')
-    os.remove('second.png')
+    compare_result = image_compare('first.png', 'second.png', first_object_name, second_object_name)
+    #os.remove('first.png')
+    #os.remove('second.png')
 
     if compare_result == 'Same Image':
-        return createReturnJson(1, compare_result)
+        return createCompareJson(1, compare_result)
     else:
-        return createReturnJson(0, compare_result)
+        return createCompareJson(0, compare_result)
 
-def createReturnJson(code, detail):
+def createCompareJson(code, detail):
     data = {}
     data['result'] = []
     data['result'].append({
@@ -204,10 +207,88 @@ def createReturnJson(code, detail):
         'version': '1.0'
     })
 
-    with open('result.json', 'w') as outfile:
+    jsonpath = 'result.json'
+    with open(jsonpath, 'w') as outfile:
         json.dump(data, outfile)
 
-    return data
+    return data, jsonpath
+
+# similar image api
+def image_similar_local(strFirstJson, strSecondJson):
+    with open(strFirstJson, 'r') as f:
+        firstData = json.load(f)
+
+    with open(strSecondJson, 'r') as f:
+        secondData = json.load(f)
+
+    return image_similar_server(firstData, secondData)
+
+def image_similar(strFirstImage, strSecondImage, first_object_name, second_object_name):
+    first_object_image = cv2.imread(strFirstImage)
+    second_object_image = cv2.imread(strSecondImage)
+
+    ssim_similar, ssim_val = ssim_compare(strFirstImage, strSecondImage)
+    if ssim_val > 90:
+        similar = ssim_val
+    else:
+        hash_result, hash_val = hash_compare(first_object_image, second_object_image)
+        hist_result, hist_val = hist_compare(first_object_image, second_object_image)
+        hash_val = hash_val / 4
+        hist_val = hist_val / 4
+        if first_object_name == second_object_name:
+            similar = 50 + hash_val + hist_val
+        else:
+            similar = hash_val + hist_val
+
+        similar = math.ceil(similar*100) / 100
+
+    return similar
+
+def image_similar_server(firstData, secondData):
+    first_version_data = firstData['version'][0]
+    first_version = first_version_data['version']
+    second_version_data = secondData['version'][0]
+    second_version = second_version_data['version']
+    if first_version != second_version:
+        similar = 'Json Version Error'
+    else:
+        first_object = firstData['object'][0]
+        first_object_name = first_object['object_name']
+        first_image_base64_string = first_object['image']
+        first_image_base64_bytes = first_image_base64_string.encode('utf-8')
+        first_image_decode_bytes = base64.b64decode(first_image_base64_bytes)
+        first_image = open('first.png', 'wb')
+        first_image.write(first_image_decode_bytes)
+
+        second_object = secondData['object'][0]
+        second_object_name = second_object['object_name']
+        second_image_base64_string = second_object['image']
+        second_image_base64_bytes = second_image_base64_string.encode('utf-8')
+        second_image_decode_bytes = base64.b64decode(second_image_base64_bytes)
+        second_image = open('second.png', 'wb')
+        second_image.write(second_image_decode_bytes)
+
+        similar = image_similar('first.png', 'second.png', first_object_name, second_object_name)
+        # os.remove('first.png')
+        # os.remove('second.png')
+
+    data = {}
+    data['result'] = []
+    data['result'].append({
+        'Similarity': str(similar)
+    })
+
+    data['version'] = []
+    data['version'].append({
+        'Name': 'ML Image Compare',
+        'version': '1.0'
+    })
+
+    jsonpath = 'result.json'
+    with open(jsonpath, 'w') as outfile:
+        json.dump(data, outfile)
+
+    return data, jsonpath
 
 # crop image api
 def cropImage(strImagePath):

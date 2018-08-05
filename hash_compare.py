@@ -101,7 +101,8 @@ def hash_calc(img1, img2):
 def hash_compare(img1, img2):
 	match1 = hash_calc(img1, img2)
 	match2 = hash_calc(img2, img1)
+	matching_val = (match1+match2)/2
 	if match1 > 50 and match2 > 50:
-		return 'Same Image'
+		return ('Same Image', matching_val)
 	else:
-		return 'Different Image'
+		return ('Different Image', matching_val)
