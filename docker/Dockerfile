@@ -22,6 +22,8 @@ RUN apt-get update
 RUN apt-get install -y apache2
 RUN mkdir -p /var/www/html/
 ENV APACHE_PATH "$APACHE_PATH/var/www/html/"
+ENV APP_VERSION "$APP_VERSION1.0.0"
+ENV APP_NAME "$APP_VERSIONML_IMAGE_COMPARE"
 RUN chmod 777 -R /var/www/html/
 EXPOSE 80
 

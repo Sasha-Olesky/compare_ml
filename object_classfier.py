@@ -1,7 +1,6 @@
 
 import os
 import tensorflow as tf
-import cv2
 import json
 import base64
 import math
@@ -15,7 +14,10 @@ from histogram_compare import *
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
+
 APACHE_DIRECTORY = os.environ['APACHE_PATH']
+APP_NAME = os.environ['APP_NAME']
+APP_VERSION = os.environ['APP_VERSION']
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
 	print ('Cannot find model')
@@ -109,8 +111,8 @@ def getJsonData(strImagePath):
 
     data['version'] = []
     data['version'].append({
-        'Name': 'ML Image Compare',
-        'version': '1.0'
+        'Name': APP_NAME,
+        'version': str(APP_VERSION)
     })
 
     with open(jsonfile, 'w') as outfile:
@@ -202,8 +204,8 @@ def createCompareJson(code, detail):
 
     data['version'] = []
     data['version'].append({
-        'Name': 'ML Image Compare',
-        'version': '1.0'
+        'Name': APP_NAME,
+        'version': str(APP_VERSION)
     })
 
     jsonpath = 'result.json'
@@ -279,8 +281,8 @@ def image_similar_server(firstData, secondData):
 
     data['version'] = []
     data['version'].append({
-        'Name': 'ML Image Compare',
-        'version': '1.0'
+        'Name': APP_NAME,
+        'version': str(APP_VERSION)
     })
 
     jsonpath = 'result.json'
@@ -448,8 +450,8 @@ def getCropImage(strImagePath):
 
     data['version'] = []
     data['version'].append({
-        'Name': 'ML Image Compare',
-        'version': '1.0'
+        'Name': APP_NAME,
+        'version': str(APP_VERSION)
     })
 
     with open(jsonfile, 'w') as outfile:
