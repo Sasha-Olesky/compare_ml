@@ -15,8 +15,7 @@ from histogram_compare import *
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
-#APACHE_DIRECTORY = os.environ['APACHE_PATH']
-APACHE_DIRECTORY = ''
+APACHE_DIRECTORY = os.environ['APACHE_PATH']
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
 	print ('Cannot find model')
@@ -185,8 +184,8 @@ def image_compare_server(firstData, secondData):
     second_image.write(second_image_decode_bytes)
 
     compare_result = image_compare('first.png', 'second.png', first_object_name, second_object_name)
-    #os.remove('first.png')
-    #os.remove('second.png')
+    os.remove('first.png')
+    os.remove('second.png')
 
     if compare_result == 'Same Image':
         return createCompareJson(1, compare_result)
@@ -269,8 +268,8 @@ def image_similar_server(firstData, secondData):
         second_image.write(second_image_decode_bytes)
 
         similar = image_similar('first.png', 'second.png', first_object_name, second_object_name)
-        # os.remove('first.png')
-        # os.remove('second.png')
+        os.remove('first.png')
+        os.remove('second.png')
 
     data = {}
     data['result'] = []
