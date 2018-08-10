@@ -11,6 +11,7 @@ from hash_compare import *
 from ssim_compare import *
 from face_compare import *
 from histogram_compare import *
+from lbp_compare import *
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
@@ -133,7 +134,10 @@ def image_compare(strFirstImage, strSecondImage, first_object_name, second_objec
         hash_result, hash_val = hash_compare(first_object_image, second_object_image)
         if hash_result == 'Same Image':
             hist_result, hist_val = hist_compare(first_object_image, second_object_image)
-            return hist_result
+            if hist_result == 'Same Image':
+                return compare_lbps(first_object_image, second_object_image)
+            else:
+                return 'Different Image'
         else:
             return 'Different Image'
     elif first_object_name == second_object_name:
@@ -141,7 +145,10 @@ def image_compare(strFirstImage, strSecondImage, first_object_name, second_objec
             return face_compare(first_object_image, second_object_image)
         elif first_object_name == 'N/A':
             hash_result, hash_val = hash_compare(first_object_image, second_object_image)
-            return hash_result
+            if hash_result == 'Same Image':
+                return compare_lbps(first_object_image, second_object_image)
+            else:
+                return 'Different Image'
         else:
             hash_result, hash_val = hash_compare(first_object_image, second_object_image)
             if hash_result == 'Same Image':
