@@ -2,7 +2,6 @@
 import os
 import tensorflow as tf
 import json
-import base64
 import math
 from requests import get
 from utils import label_map_util
@@ -38,7 +37,7 @@ categories = label_map_util.convert_label_map_to_categories(label_map, max_num_c
 category_index = label_map_util.create_category_index(categories)
 
 # get json api
-def object_detection(strImagePath):
+def object_detection(strImagePath, server_idx):
     image_np = cv2.imread(strImagePath)
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
@@ -80,34 +79,22 @@ def object_detection(strImagePath):
             object_name = name
             object_image = image_np[round(y1):round(y2), round(x1):round(x2)]
 
-    name = os.path.splitext(strImagePath)[0]
-    strObjectImagePath = os.path.basename(name) + '.jpg'
+    strObjectImagePath = APACHE_DIRECTORY + str(server_idx) + '.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
     return (object_name, object_image)
 
-def getJsonData(strImagePath):
+def getJsonData(strImagePath, server_idx):
     full_path = os.path.splitext(strImagePath)[0]
     file_name = os.path.basename(full_path)
     jsonfile = file_name + '.json'
 
-    object_name, object_image = object_detection(strImagePath)
-    hash_value = get_hash(object_image)
-    hist_value = get_hist(object_image)
-
-    imagefile = file_name + '.jpg'
-    with open(imagefile, 'rb') as open_file:
-        byte_content = open_file.read()
-
-    base64_bytes = base64.b64encode(byte_content)
-    base64_string = base64_bytes.decode('utf-8')
+    object_name, object_image = object_detection(strImagePath, server_idx)
 
     data = {}
     data['object'] = []
     data['object'].append({
         'object_name': str(object_name),
-        'hash_value': str(hash_value),
-        'hist_value': str(hist_value),
-        'image': base64_string
+        'processing_idx': str(server_idx)
     })
 
     data['version'] = []
@@ -119,10 +106,12 @@ def getJsonData(strImagePath):
     with open(jsonfile, 'w') as outfile:
         json.dump(data, outfile)
 
-    return data, jsonfile, imagefile
+    return data, jsonfile
 
 # compare image api
-def image_compare(strFirstImage, strSecondImage, first_object_name, second_object_name):
+def image_compare(first_idx, second_idx, first_object_name, second_object_name):
+    strFirstImage = APACHE_DIRECTORY + first_idx + '.jpg'
+    strSecondImage = APACHE_DIRECTORY + second_idx + '.jpg'
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -146,7 +135,7 @@ def image_compare(strFirstImage, strSecondImage, first_object_name, second_objec
         elif first_object_name == 'N/A':
             hash_result, hash_val = hash_compare(first_object_image, second_object_image)
             if hash_result == 'Same Image':
-                return compare_lbps(first_object_image, second_object_image)
+                return compare_lbp(first_object_image, second_object_image)
             else:
                 return 'Different Image'
         else:
@@ -178,23 +167,13 @@ def image_compare_server(firstData, secondData):
 
     first_object = firstData['object'][0]
     first_object_name = first_object['object_name']
-    first_image_base64_string = first_object['image']
-    first_image_base64_bytes = first_image_base64_string.encode('utf-8')
-    first_image_decode_bytes = base64.b64decode(first_image_base64_bytes)
-    first_image = open('first.png', 'wb')
-    first_image.write(first_image_decode_bytes)
+    first_image_idx = first_object['processing_idx']
 
     second_object = secondData['object'][0]
     second_object_name = second_object['object_name']
-    second_image_base64_string = second_object['image']
-    second_image_base64_bytes = second_image_base64_string.encode('utf-8')
-    second_image_decode_bytes = base64.b64decode(second_image_base64_bytes)
-    second_image = open('second.png', 'wb')
-    second_image.write(second_image_decode_bytes)
+    second_image_idx = second_object['processing_idx']
 
-    compare_result = image_compare('first.png', 'second.png', first_object_name, second_object_name)
-    os.remove('first.png')
-    os.remove('second.png')
+    compare_result = image_compare(first_image_idx, second_image_idx, first_object_name, second_object_name)
 
     if compare_result == 'Same Image':
         return createCompareJson(1, compare_result)
@@ -231,7 +210,9 @@ def image_similar_local(strFirstJson, strSecondJson):
 
     return image_similar_server(firstData, secondData)
 
-def image_similar(strFirstImage, strSecondImage, first_object_name, second_object_name):
+def image_similar(first_idx, second_idx, first_object_name, second_object_name):
+    strFirstImage = APACHE_DIRECTORY + first_idx + '.jpg'
+    strSecondImage = APACHE_DIRECTORY + second_idx + '.jpg'
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -262,23 +243,13 @@ def image_similar_server(firstData, secondData):
     else:
         first_object = firstData['object'][0]
         first_object_name = first_object['object_name']
-        first_image_base64_string = first_object['image']
-        first_image_base64_bytes = first_image_base64_string.encode('utf-8')
-        first_image_decode_bytes = base64.b64decode(first_image_base64_bytes)
-        first_image = open('first.png', 'wb')
-        first_image.write(first_image_decode_bytes)
+        first_image_idx = first_object['processing_idx']
 
         second_object = secondData['object'][0]
         second_object_name = second_object['object_name']
-        second_image_base64_string = second_object['image']
-        second_image_base64_bytes = second_image_base64_string.encode('utf-8')
-        second_image_decode_bytes = base64.b64decode(second_image_base64_bytes)
-        second_image = open('second.png', 'wb')
-        second_image.write(second_image_decode_bytes)
+        second_image_idx = second_object['processing_idx']
 
-        similar = image_similar('first.png', 'second.png', first_object_name, second_object_name)
-        os.remove('first.png')
-        os.remove('second.png')
+        similar = image_similar(first_image_idx, second_image_idx, first_object_name, second_object_name)
 
     data = {}
     data['result'] = []

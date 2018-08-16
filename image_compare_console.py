@@ -1,5 +1,6 @@
 from object_classfier import *
 
+server_idx = 0
 while True:
     print('Do you want to get image data? (y/n)')
     doGet = input()
@@ -9,7 +10,8 @@ while True:
         if doGet == 'y':
             print('Input Image URL.')
             imageURL = input()
-            data, jsonfile, imagefile = getJsonData(imageURL)
+            data, jsonfile = getJsonData(imageURL, server_idx)
+            server_idx += 1
             print(data)
         else:
             print('Input Image URL.')

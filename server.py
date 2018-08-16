@@ -7,6 +7,7 @@ app = Flask(__name__)
 api = Api(app)
 
 class ImageUpload(Resource):
+    server_idx = 0
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('image_url')
@@ -27,8 +28,9 @@ class ImageUpload(Resource):
 
         try:
             urllib.request.urlretrieve(image_url, file_name)
-            jsonFile, jsonpath, imagepath = getJsonData(file_name)
-            os.remove(imagepath)
+            jsonFile, jsonpath = getJsonData(file_name, self.server_idx)
+            self.server_idx += 1
+            os.remove(file_name)
             os.remove(jsonpath)
         except:
             jsonFile = 'cannot find image_url. please input correct url.'
