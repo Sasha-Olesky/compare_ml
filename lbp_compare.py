@@ -44,10 +44,9 @@ class LocalBinaryPatterns:
         # return the histogram of Local Binary Patterns
         return hist
 
-def get_lbp(strImg):
+def get_lbp(img):
     desc = LocalBinaryPatterns(24, 8)
-    image = cv2.imread(strImg)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     hist = desc.describe(gray)
     return hist
 

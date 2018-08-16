@@ -89,12 +89,20 @@ def getJsonData(strImagePath, server_idx):
     jsonfile = file_name + '.json'
 
     object_name, object_image = object_detection(strImagePath, server_idx)
+    ssim_val = get_ssim(strImagePath)
+    hash_val = get_hash(object_image)
+    hist_val = get_hist(object_image)
+    lbp_val = get_lbp(object_image)
 
     data = {}
     data['object'] = []
     data['object'].append({
         'object_name': str(object_name),
-        'processing_idx': str(server_idx)
+        'processing_idx': str(server_idx),
+        'ssim' : str(ssim_val),
+        'hash' : str(hash_val),
+        'hist' : str(hist_val),
+        'lbp' : str(lbp_val)
     })
 
     data['version'] = []
