@@ -11,6 +11,7 @@ class ImageUpload(Resource):
 	def post(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('image_url')
+		parser.add_argument('identificator')
 		args = parser.parse_args()
 
 		image_url = args['image_url'];
@@ -26,9 +27,11 @@ class ImageUpload(Resource):
 		file_name = file_name.replace('|', '_')
 		file_name = file_name.replace('\"', '_')
 
+		identificator = args['identificator']
+
 		try:
 			urllib.request.urlretrieve(image_url, file_name)
-			jsonFile, jsonpath = getJsonData(file_name, self.server_idx)
+			jsonFile, jsonpath = getJsonData(file_name, identificator, self.server_idx)
 			self.server_idx += 1
 			os.remove(file_name)
 			os.remove(jsonpath)

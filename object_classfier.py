@@ -83,7 +83,7 @@ def object_detection(strImagePath, server_idx):
     cv2.imwrite(strObjectImagePath, object_image)
     return (object_name, object_image)
 
-def getJsonData(strImagePath, server_idx):
+def getJsonData(strImagePath, identificator, server_idx):
     full_path = os.path.splitext(strImagePath)[0]
     file_name = os.path.basename(full_path)
     jsonfile = file_name + '.json'
@@ -102,7 +102,8 @@ def getJsonData(strImagePath, server_idx):
         'ssim' : str(ssim_val),
         'hash' : str(hash_val),
         'hist' : str(hist_val),
-        'lbp' : str(lbp_val)
+        'lbp' : str(lbp_val),
+        'identificator' : identificator
     })
 
     data['version'] = []
