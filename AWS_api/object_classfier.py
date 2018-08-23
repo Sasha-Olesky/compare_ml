@@ -1,5 +1,6 @@
 
 import os
+import shutil
 import tensorflow as tf
 import json
 import math
@@ -416,7 +417,8 @@ def cropImage(strImagePath):
     strObjectImagePath = os.path.basename(cropfilename) + '_crop.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
     strFinalImagePath = APACHE_DIRECTORY + cropfilename + '_crop.jpg'
-    os.rename(strObjectImagePath, strFinalImagePath)
+    # os.rename(strObjectImagePath, strFinalImagePath)
+    shutil.move(strObjectImagePath, strFinalImagePath)
 
     ip_address = get('https://api.ipify.org').text
     strObjectImagePath = 'http://' + str(ip_address) + '/' + strObjectImagePath
