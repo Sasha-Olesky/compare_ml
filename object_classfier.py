@@ -12,13 +12,16 @@ from ssim_compare import *
 from face_compare import *
 from histogram_compare import *
 from lbp_compare import *
+from google.cloud import storage
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
 
-APACHE_DIRECTORY = os.environ['APACHE_PATH']
 APP_NAME = os.environ['APP_NAME']
 APP_VERSION = os.environ['APP_VERSION']
+
+TEMP_DIR = './temp/'
+GS_BUCKET_NAME = 'image-ml'
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
 	print ('Cannot find model')
@@ -80,7 +83,7 @@ def object_detection(strImagePath, server_idx):
             object_name = name
             object_image = image_np[round(y1):round(y2), round(x1):round(x2)]
 
-    strObjectImagePath = APACHE_DIRECTORY + str(server_idx) + '.jpg'
+    strObjectImagePath = TEMP_DIR + str(server_idx) + '.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
     return (object_name, object_image)
 
@@ -116,12 +119,14 @@ def getJsonData(strImagePath, identificator, server_idx):
     with open(jsonfile, 'w') as outfile:
         json.dump(data, outfile)
 
+    upload_gcloud_storage(strImagePath)
+
     return data, jsonfile
 
 # compare image api
 def image_compare(first_idx, second_idx, first_object_name, second_object_name):
-    strFirstImage = APACHE_DIRECTORY + first_idx + '.jpg'
-    strSecondImage = APACHE_DIRECTORY + second_idx + '.jpg'
+    strFirstImage = TEMP_DIR + first_idx + '.jpg'
+    strSecondImage = TEMP_DIR + second_idx + '.jpg'
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -221,8 +226,8 @@ def image_similar_local(strFirstJson, strSecondJson):
     return image_similar_server(firstData, secondData)
 
 def image_similar(first_idx, second_idx, first_object_name, second_object_name):
-    strFirstImage = APACHE_DIRECTORY + first_idx + '.jpg'
-    strSecondImage = APACHE_DIRECTORY + second_idx + '.jpg'
+    strFirstImage = TEMP_DIR + first_idx + '.jpg'
+    strSecondImage = TEMP_DIR + second_idx + '.jpg'
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -279,6 +284,15 @@ def image_similar_server(firstData, secondData):
 
     return data, jsonpath
 
+def upload_gcloud_storage(image_path):
+    client = storage.Client()
+    bucket = client.get_bucket(GS_BUCKET_NAME)
+    file_name = image_path.split('/')[-1]
+    gs_url = 'gs://' + GS_BUCKET_NAME + '/' + file_name
+    blob = bucket.blob(gs_url)
+    blob.upload_from_filename(filename=image_path)
+    return gs_url
+
 # crop image api
 def cropImage(strImagePath):
     image_np = cv2.imread(strImagePath)
@@ -323,6 +337,7 @@ def cropImage(strImagePath):
             object_name = name
             object_rect = (x1, x2, y1, y2)
             exist_object = True
+
 
     if exist_object:
         x1, x2, y1, y2 = object_rect
@@ -416,13 +431,9 @@ def cropImage(strImagePath):
     cropfilename = os.path.splitext(strImagePath)[0]
     strObjectImagePath = os.path.basename(cropfilename) + '_crop.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
-    strFinalImagePath = APACHE_DIRECTORY + cropfilename + '_crop.jpg'
-    # os.rename(strObjectImagePath, strFinalImagePath)
-    shutil.move(strObjectImagePath, strFinalImagePath)
-
-    ip_address = get('https://api.ipify.org').text
-    strObjectImagePath = 'http://' + str(ip_address) + '/' + strObjectImagePath
-    return (object_name, strObjectImagePath)
+    
+    gs_url = upload_gcloud_storage(strObjectImagePath)
+    return (object_name, gs_url)
 
 def getCropImage(strImagePath):
     full_path = os.path.splitext(strImagePath)[0]
