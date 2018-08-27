@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import time
 import json
 import re
@@ -114,27 +116,27 @@ def do_upload(data):
         return False
 
 def do_crop(image_url):
-#try:
-    file_name = TEMP_DIR + image_url.split('/')[-1]
-    file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name)
+    try:
+        file_name = TEMP_DIR + image_url.split('/')[-1]
+        file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name)
 
-    print('Downloading from {}'.format(image_url) + ' to {}'.format(file_name))
-    request = Request(image_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urlopen(request)
-    f = open(file_name, 'wb')
-    content = response.read()
-    f.write(content)
-    f.close()
-        
-    json_data, json_file = getCropImage(file_name)
-    os.remove(file_name)
-    os.remove(json_file)
+        print('Downloading from {}'.format(image_url) + ' to {}'.format(file_name))
+        request = Request(image_url, headers={'User-Agent': 'Mozilla/5.0'})
+        response = urlopen(request)
+        f = open(file_name, 'wb')
+        content = response.read()
+        f.write(content)
+        f.close()
 
-    publish_messages(json.dumps(json_data))
-    return True
-#except:
-    # print('Not found image file from the {}'.format(image_url))
-    # return False
+        json_data, json_file = getCropImage(file_name)
+        os.remove(file_name)
+        os.remove(json_file)
+
+        publish_messages(json.dumps(json_data))
+        return True
+    except:
+        print('Not found image file from the {}'.format(image_url))
+        return False
 
 def do_compare(compare_data):
     try:
