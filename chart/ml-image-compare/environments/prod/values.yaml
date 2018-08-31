@@ -1,4 +1,0 @@
-pubsub:
-  PROJECT: audotto
-  TOPIC: ImageML-JSON
-  SUBSCRIPTION: ImageML-API

@@ -46,7 +46,6 @@ class LocalBinaryPatterns:
 
 def get_lbp(image):
     desc = LocalBinaryPatterns(24, 8)
-    #image = cv2.imread(strImg)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     hist = desc.describe(gray)
     return hist

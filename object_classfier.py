@@ -18,6 +18,7 @@ PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
 
 # variables from docker
+
 APP_VERSION = os.environ.get("APP_VERSION")
 APP_NAME = os.environ.get("APP_NAME")
 GS_BUCKET_NAME = 'image-ml'
@@ -117,8 +118,6 @@ def getJsonData(strImagePath, identificator, server_idx):
 
     with open(jsonfile, 'w') as outfile:
         json.dump(data, outfile)
-
-    upload_gcloud_storage(strImagePath)
 
     return data, jsonfile
 

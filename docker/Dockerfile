@@ -9,21 +9,22 @@ ENV APP_NAME ML_IMAGE_COMPARE
 
 RUN apt-get update &&\
     apt-get install -y python-opencv build-essential  &&\
-	apt-get install -y lsb-release &&\
-	apt-get install -y apt-transport-https &&\
-	apt-get clean
+    apt-get install -y lsb-release &&\
+    apt-get install -y apt-transport-https &&\
+    apt-get clean
 
-RUN  pip3 install tensorflow &&\
-     pip3 install opencv-python &&\
-     pip3 install cmake &&\
-     pip3 install face-recognition &&\
-     pip3 install pillow &&\
-     pip3 install scipy &&\
-     pip3 install requests &&\
-     pip3 install scikit-image &&\
-     pip3 install scikit-learn &&\
-     pip3 install google-cloud-pubsub &&\
-     pip3 install google-cloud-storage
+RUN pip3 install tensorflow &&\
+    pip3 install opencv-python &&\
+    pip3 install cmake &&\
+    pip3 install face-recognition &&\
+    pip3 install pillow &&\
+    pip3 install scipy &&\
+    pip3 install requests &&\
+    pip3 install scikit-image &&\
+    pip3 install scikit-learn &&\
+    pip3 install google-cloud-pubsub &&\
+    pip3 install --upgrade google-cloud-storage &&\
+    pip3 install flask
 
 COPY . ${SERVER_HOME}
 
@@ -33,21 +34,6 @@ RUN  mkdir -p ${IMAGE_BASE_PATH} &&\
 
 WORKDIR ${SERVER_HOME}
 
-#RUN chmod +x /opt/api/run.sh
-#CMD /opt/api/run.sh
-
-#RUN	apt-get update &&\
-#	apt-get install -y google-cloud-sdk &&\
-#    apt-get clean
-
-
-RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
-RUN mkdir -p /usr/local/gcloud \
-  && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
-  && /usr/local/gcloud/google-cloud-sdk/install.sh
-ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
-ENV GOOGLE_APPLICATION_CREDENTIALS /opt/api/application_default_credentials.json
-
-
 ENTRYPOINT [ "python3" ]
 CMD [ "server.py" ]
+CMD [ "webapi_server.py" ]
