@@ -17,10 +17,9 @@ from google.cloud import storage
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
 
-APP_NAME = os.environ['APP_NAME']
-APP_VERSION = os.environ['APP_VERSION']
-
-TEMP_DIR = './temp/'
+# variables from docker
+APP_VERSION = os.environ.get("APP_VERSION")
+APP_NAME = os.environ.get("APP_NAME")
 GS_BUCKET_NAME = 'image-ml'
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
@@ -83,7 +82,7 @@ def object_detection(strImagePath, server_idx):
             object_name = name
             object_image = image_np[round(y1):round(y2), round(x1):round(x2)]
 
-    strObjectImagePath = TEMP_DIR + str(server_idx) + '.jpg'
+    strObjectImagePath = str(server_idx) + '.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
     return (object_name, object_image)
 
@@ -125,8 +124,8 @@ def getJsonData(strImagePath, identificator, server_idx):
 
 # compare image api
 def image_compare(first_idx, second_idx, first_object_name, second_object_name):
-    strFirstImage = TEMP_DIR + first_idx + '.jpg'
-    strSecondImage = TEMP_DIR + second_idx + '.jpg'
+    strFirstImage = first_idx + '.jpg'
+    strSecondImage = second_idx + '.jpg'
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -226,8 +225,8 @@ def image_similar_local(strFirstJson, strSecondJson):
     return image_similar_server(firstData, secondData)
 
 def image_similar(first_idx, second_idx, first_object_name, second_object_name):
-    strFirstImage = TEMP_DIR + first_idx + '.jpg'
-    strSecondImage = TEMP_DIR + second_idx + '.jpg'
+    strFirstImage = first_idx + '.jpg'
+    strSecondImage = second_idx + '.jpg'
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -337,7 +336,6 @@ def cropImage(strImagePath):
             object_name = name
             object_rect = (x1, x2, y1, y2)
             exist_object = True
-
 
     if exist_object:
         x1, x2, y1, y2 = object_rect

@@ -1,16 +1,15 @@
-#!/usr/bin/python3
-
 import time
 import json
 import re
+import os
 
 from urllib.request import Request, urlopen
 from google.cloud import pubsub_v1
 from object_classfier import *
 
-PROJECT = 'audotto'
-TOPIC = 'ImageML-responses'
-SUBSCRIPTION = 'ImageML-srv'
+PROJECT = os.environ.get('PROJECT') or 'audotto'
+TOPIC = os.environ.get('TOPIC') or 'ImageML-responses'
+SUBSCRIPTION = os.environ.get('SUBSCRIPTION') or 'ImageML-srv'
 
 TEMP_DIR = './temp/'
 
@@ -36,7 +35,7 @@ def publish_messages(message):
     message = message.encode('utf-8')
     publisher.publish(topic_path, data=message)
 
-    # print('Published messages.\n\t{}\n'.format(message))
+    print('Published messages.\n\t{}\n'.format(message))
 
 def receive_messages():
     """Receives messages from a pull subscription."""
@@ -44,7 +43,7 @@ def receive_messages():
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(
         PROJECT, SUBSCRIPTION)
-
+    
     def callback(message):
         msg = json.loads(message.data.decode('utf-8'))
         msg['status'] = STATUS_INIT
@@ -53,7 +52,8 @@ def receive_messages():
         message.ack()
 
     subscriber.subscribe(subscription_path, callback=callback)
-
+    print('Subscribed to {}, project: {}'.format(PROJECT, SUBSCRIPTION))
+    
     print('Listening for messages on {}'.format(subscription_path))
     while True:
         process_messages()
@@ -63,12 +63,21 @@ def receive_messages():
 def process_messages():
     for msg in MESSAGES:
         if msg['status'] == STATUS_UP:
-            continue
+        	continue
+        
+        action = ''
+        data = ''
+		
+        if 'action' in msg:
+            action = msg['action']
+        else:
+            return False
+        if 'data' in msg:
+            data = msg['data']
+        else:
+            return False
 
         msg['status'] = STATUS_UP
-
-        action = msg['action']
-        data = msg['data']
         
         if action == ACTION_UPLOAD:
             do_upload(data)
@@ -87,6 +96,13 @@ def garbage_messages():
             MESSAGES.remove(msg)
             print('Removed message: {}'.format(msg))
 
+def make_message(action, m):
+    msg = {}
+    msg['error'] = {}
+    msg['error']['action'] = action
+    msg['error']['message'] = m
+    return msg
+
 def do_upload(data):
     try:
         image_url = data['image_url']
@@ -103,16 +119,30 @@ def do_upload(data):
         content = response.read()
         f.write(content)
         f.close()
-            
+        print('download finish')
+    except:
+        m = 'Not found image file from the {}'.format(image_url)
+        print(m)
+        msg = make_message(ACTION_UPLOAD, m)
+        publish_messages(json.dumps(msg))
+        return False
+
+    try:        
         json_data, json_file = getJsonData(file_name, identificator, server_idx)
+        print('process finish')
         server_idx += 1
         os.remove(file_name)
         os.remove(json_file)
+        print('delete finish')
 
         publish_messages(json.dumps(json_data))
+        print('upload message')
         return True
     except:
-        print('Not found image file from the {}'.format(image_url))
+        m = 'Could not get the json data for {}'.format(image_url)
+        print(m)
+        msg = make_message(ACTION_UPLOAD, m)
+        publish_messages(json.dumps(msg))
         return False
 
 def do_crop(image_url):
@@ -127,15 +157,23 @@ def do_crop(image_url):
         content = response.read()
         f.write(content)
         f.close()
-
+    except:
+        m = 'Not found image file from the {}'.format(image_url)
+        print(m)
+        msg = make_message(ACTION_CROP, m)
+        publish_messages(json.dumps(msg))
+    
+    try:
         json_data, json_file = getCropImage(file_name)
         os.remove(file_name)
         os.remove(json_file)
-
         publish_messages(json.dumps(json_data))
         return True
     except:
-        print('Not found image file from the {}'.format(image_url))
+        m = 'Could not get json data for {}'.format(image_url)
+        print(m)
+        msg = make_message(ACTION_CROP, m)
+        publish_messages(json.dumps(msg))
         return False
 
 def do_compare(compare_data):
@@ -149,7 +187,13 @@ def do_compare(compare_data):
         publish_messages(json.dumps(json_data))
         return True
     except:
-        print('Error occurred while processing compare images')
+        m = 'Error occurred while processing compare images'
+        print(m)
+        msg = {}
+        msg['error'] = {}
+        msg['error']['action'] = ACTION_COMPARE
+        msg['error']['message'] = m
+        publish_messages(json.dumps(msg))
         return False
 
 def do_similar(compare_data):
@@ -163,8 +207,17 @@ def do_similar(compare_data):
         publish_messages(json.dumps(json_data))
         return True
     except:
-        print('Error occurred while processing compare images')
+        m = 'Error occurred while processing compare images'
+        print(m)
+        msg = {}
+        msg['error'] = {}
+        msg['error']['action'] = ACTION_SIMILAR
+        msg['error']['message'] = m
+        publish_messages(json.dumps(msg))
         return False
     
 if __name__ == '__main__':
+    print('Starting...')
+    if not os.path.exists(TEMP_DIR):
+        os.makedirs(TEMP_DIR)
     receive_messages()

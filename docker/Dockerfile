@@ -1,9 +1,18 @@
-FROM ubuntu:16.04
-
-RUN apt-get update
-RUN apt-get install -y python3-pip git
-
 FROM python:3.5
+
+# ENV VARIABLE_NAME DEFAULT_VALUE
+ENV SERVER_HOME /opt/api
+ENV IMAGE_BASE_PATH /var/www/html
+ENV IMAGE_BASE_URL localhost:80
+ENV APP_VERSION 1.2.0
+ENV APP_NAME ML_IMAGE_COMPARE
+
+RUN apt-get update &&\
+    apt-get install -y python-opencv build-essential  &&\
+	apt-get install -y lsb-release &&\
+	apt-get install -y apt-transport-https &&\
+	apt-get clean
+
 RUN  pip3 install tensorflow &&\
      pip3 install opencv-python &&\
      pip3 install cmake &&\
@@ -13,21 +22,32 @@ RUN  pip3 install tensorflow &&\
      pip3 install requests &&\
      pip3 install scikit-image &&\
      pip3 install scikit-learn &&\
-	 pip3 install google-cloud-pubsub &&\
-	 pip3 install google-cloud-storage
+     pip3 install google-cloud-pubsub &&\
+     pip3 install google-cloud-storage
 
-# download source from github
-RUN git clone https://github.com/Sasha-Olesky/compare_ml.git
-RUN cd compare_ml
+COPY . ${SERVER_HOME}
 
-RUN apt-get update
-ENV APP_VERSION "$APP_VERSION 1.1.0 "
-ENV APP_NAME "$APP_NAME ML_IMAGE_COMPARE "
-
-RUN chmod +x /compare_ml/run.sh
-CMD ./compare_ml/run.sh
+RUN  mkdir -p ${IMAGE_BASE_PATH} &&\
+     chmod 777 -R ${IMAGE_BASE_PATH}
 
 
+WORKDIR ${SERVER_HOME}
+
+#RUN chmod +x /opt/api/run.sh
+#CMD /opt/api/run.sh
+
+#RUN	apt-get update &&\
+#	apt-get install -y google-cloud-sdk &&\
+#    apt-get clean
 
 
+RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
+RUN mkdir -p /usr/local/gcloud \
+  && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
+  && /usr/local/gcloud/google-cloud-sdk/install.sh
+ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
+ENV GOOGLE_APPLICATION_CREDENTIALS /opt/api/application_default_credentials.json
 
+
+ENTRYPOINT [ "python3" ]
+CMD [ "server.py" ]

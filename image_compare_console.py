@@ -10,9 +10,7 @@ while True:
         if doGet == 'y':
             print('Input Image URL.')
             imageURL = input()
-            print('Input Image identificator.')
-            identificator = input()
-            data, jsonfile = getJsonData(imageURL, identificator, server_idx)
+            data, jsonfile = getJsonData(imageURL, 'identificator', server_idx)
             server_idx += 1
             print(data)
         else:
