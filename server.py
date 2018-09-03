@@ -96,7 +96,7 @@ def do_upload(data):
         server_idx = 0
 
         file_name = image_url.split('/')[-1]
-        file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name)
+        file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name) + '.jpg'
 
         print('Downloading from {}'.format(image_url) + ' to {}'.format(file_name))
         request = Request(image_url, headers={'User-Agent': 'Mozilla/5.0'})

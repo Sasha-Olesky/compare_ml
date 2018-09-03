@@ -13,14 +13,15 @@ from face_compare import *
 from histogram_compare import *
 from lbp_compare import *
 from google.cloud import storage
+import base64
 
 PATH_TO_CKPT = 'model/frozen_inference_graph.pb'
 PATH_TO_LABELS = os.path.join('model', 'mscoco_label_map.pbtxt')
 
 # variables from docker
 
-APP_VERSION = os.environ.get("APP_VERSION")
-APP_NAME = os.environ.get("APP_NAME")
+APP_VERSION = os.environ.get("APP_VERSION") or '1.2.0'
+APP_NAME = os.environ.get("APP_NAME") or 'Image_Compare_ML'
 GS_BUCKET_NAME = 'image-ml'
 
 if not os.path.exists('model/frozen_inference_graph.pb'):
@@ -98,6 +99,12 @@ def getJsonData(strImagePath, identificator, server_idx):
     hist_val = get_hist(object_image)
     lbp_val = get_lbp(object_image)
 
+    with open(strImagePath, 'rb') as open_file:
+        byte_content = open_file.read()
+
+    base64_bytes = base64.b64encode(byte_content)
+    base64_string = base64_bytes.decode('utf-8')
+
     data = {}
     data['object'] = []
     data['object'].append({
@@ -107,6 +114,7 @@ def getJsonData(strImagePath, identificator, server_idx):
         'hash' : str(hash_val),
         'hist' : str(hist_val),
         'lbp' : str(lbp_val),
+        'feature' : base64_string,
         'identificator' : identificator
     })
 
@@ -122,9 +130,7 @@ def getJsonData(strImagePath, identificator, server_idx):
     return data, jsonfile
 
 # compare image api
-def image_compare(first_idx, second_idx, first_object_name, second_object_name):
-    strFirstImage = first_idx + '.jpg'
-    strSecondImage = second_idx + '.jpg'
+def image_compare(strFirstImage, strSecondImage, first_object_name, second_object_name):
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -180,13 +186,25 @@ def image_compare_server(firstData, secondData):
 
     first_object = firstData['object'][0]
     first_object_name = first_object['object_name']
-    first_image_idx = first_object['processing_idx']
+    first_data = first_object['processing_idx'] + '.jpg'
+    first_indentificator = first_object['identificator'] + '.jpg'
+    first_feature_base64_string = first_object['feature']
+    first_feature_base64_bytes = first_feature_base64_string.encode('utf-8')
+    first_feature_decode_bytes = base64.b64decode(first_feature_base64_bytes)
+    first_feature = open(first_indentificator, 'wb')
+    first_feature.write(first_feature_decode_bytes)
 
     second_object = secondData['object'][0]
     second_object_name = second_object['object_name']
-    second_image_idx = second_object['processing_idx']
+    second_data = second_object['processing_idx'] + '.jpg'
+    second_indentificator = second_object['identificator'] + '.jpg'
+    second_feature_base64_string = second_object['feature']
+    second_feature_base64_bytes = second_feature_base64_string.encode('utf-8')
+    second_feature_decode_bytes = base64.b64decode(second_feature_base64_bytes)
+    second_feature = open(second_indentificator, 'wb')
+    second_feature.write(second_feature_decode_bytes)
 
-    compare_result = image_compare(first_image_idx, second_image_idx, first_object_name, second_object_name)
+    compare_result = image_compare(first_indentificator, second_indentificator, first_object_name, second_object_name)
 
     if compare_result == 'Same Image':
         return createCompareJson(1, compare_result)
@@ -223,9 +241,7 @@ def image_similar_local(strFirstJson, strSecondJson):
 
     return image_similar_server(firstData, secondData)
 
-def image_similar(first_idx, second_idx, first_object_name, second_object_name):
-    strFirstImage = first_idx + '.jpg'
-    strSecondImage = second_idx + '.jpg'
+def image_similar(strFirstImage, strSecondImage, first_object_name, second_object_name):
     first_object_image = cv2.imread(strFirstImage)
     second_object_image = cv2.imread(strSecondImage)
 
@@ -256,13 +272,25 @@ def image_similar_server(firstData, secondData):
     else:
         first_object = firstData['object'][0]
         first_object_name = first_object['object_name']
-        first_image_idx = first_object['processing_idx']
+        first_data = first_object['processing_idx'] + '.jpg'
+        first_indentificator = first_object['identificator'] + '.jpg'
+        first_feature_base64_string = first_object['feature']
+        first_feature_base64_bytes = first_feature_base64_string.encode('utf-8')
+        first_feature_decode_bytes = base64.b64decode(first_feature_base64_bytes)
+        first_feature = open(first_indentificator, 'wb')
+        first_feature.write(first_feature_decode_bytes)
 
         second_object = secondData['object'][0]
         second_object_name = second_object['object_name']
-        second_image_idx = second_object['processing_idx']
+        second_data = second_object['processing_idx'] + '.jpg'
+        second_indentificator = second_object['identificator'] + '.jpg'
+        second_feature_base64_string = second_object['feature']
+        second_feature_base64_bytes = second_feature_base64_string.encode('utf-8')
+        second_feature_decode_bytes = base64.b64decode(second_feature_base64_bytes)
+        second_feature = open(second_indentificator, 'wb')
+        second_feature.write(second_feature_decode_bytes)
 
-        similar = image_similar(first_image_idx, second_image_idx, first_object_name, second_object_name)
+        similar = image_similar(first_indentificator, second_indentificator, first_object_name, second_object_name)
 
     data = {}
     data['result'] = []
