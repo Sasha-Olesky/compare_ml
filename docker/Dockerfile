@@ -29,4 +29,3 @@ WORKDIR ${SERVER_HOME}
 
 ENTRYPOINT [ "python3" ]
 CMD [ "server.py" ]
-CMD [ "webapi_server.py" ]
