@@ -2,8 +2,6 @@ FROM python:3.5
 
 # ENV VARIABLE_NAME DEFAULT_VALUE
 ENV SERVER_HOME /opt/api
-ENV IMAGE_BASE_PATH /var/www/html
-ENV IMAGE_BASE_URL localhost:80
 ENV APP_VERSION 1.2.0
 ENV APP_NAME ML_IMAGE_COMPARE
 
@@ -27,11 +25,6 @@ RUN pip3 install tensorflow &&\
     pip3 install flask
 
 COPY . ${SERVER_HOME}
-
-RUN  mkdir -p ${IMAGE_BASE_PATH} &&\
-     chmod 777 -R ${IMAGE_BASE_PATH}
-
-
 WORKDIR ${SERVER_HOME}
 
 ENTRYPOINT [ "python3" ]
