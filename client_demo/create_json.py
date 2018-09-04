@@ -2,25 +2,20 @@ import os
 import re
 import json
 import base64
+import urllib
 from urllib.request import Request, urlopen
 
 APP_VERSION = os.environ.get("APP_VERSION") or '1.2.0'
 APP_NAME = os.environ.get("APP_NAME") or 'Image_Compare_ML'
 GS_BUCKET_NAME = 'image-ml'
 
-print('Please Input Image URL')
-image_url = input()
+image_url = 'https://timedotcom.files.wordpress.com/2017/12/joey-degrandis-hsam-memory.jpg'
 
 file_name = image_url.split('/')[-1]
-file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name)
+file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name) + '.jpg'
 
 try:
-    image_request = Request(image_url, headers={'User-Agent': 'Mozilla/5.0'})
-    response = urlopen(image_request)
-    f = open(file_name, 'wb')
-    content = response.read()
-    f.write(content)
-    f.close()
+    urllib.request.urlretrieve(image_url, file_name)
 
     with open(file_name, 'rb') as open_file:
         byte_content = open_file.read()
@@ -46,6 +41,7 @@ try:
         json.dump(data, outfile)
 
     os.remove(file_name)
+    print('Download Successed.')
 
 except:
     print('Could not download image.')

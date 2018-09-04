@@ -451,6 +451,7 @@ def cropImage(strImagePath):
     cv2.imwrite(strObjectImagePath, object_image)
     
     gs_url = upload_gcloud_storage(strObjectImagePath)
+    os.remove(strObjectImagePath)
     return (object_name, gs_url)
 
 def getCropImage(strImagePath):
