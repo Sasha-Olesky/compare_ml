@@ -42,7 +42,7 @@ categories = label_map_util.convert_label_map_to_categories(label_map, max_num_c
 category_index = label_map_util.create_category_index(categories)
 
 # get json api
-def object_detection(strImagePath, server_idx):
+def object_detection(strImagePath):
     image_np = cv2.imread(strImagePath)
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph) as sess:
@@ -84,16 +84,14 @@ def object_detection(strImagePath, server_idx):
             object_name = name
             object_image = image_np[round(y1):round(y2), round(x1):round(x2)]
 
-    strObjectImagePath = str(server_idx) + '.jpg'
-    cv2.imwrite(strObjectImagePath, object_image)
     return (object_name, object_image)
 
-def getJsonData(strImagePath, identificator, server_idx):
+def getJsonData(strImagePath, identificator):
     full_path = os.path.splitext(strImagePath)[0]
     file_name = os.path.basename(full_path)
     jsonfile = file_name + '.json'
 
-    object_name, object_image = object_detection(strImagePath, server_idx)
+    object_name, object_image = object_detection(strImagePath)
     ssim_val = get_ssim(strImagePath)
     hash_val = get_hash(object_image)
     hist_val = get_hist(object_image)
@@ -109,7 +107,6 @@ def getJsonData(strImagePath, identificator, server_idx):
     data['object'] = []
     data['object'].append({
         'object_name': str(object_name),
-        'processing_idx': str(server_idx),
         'ssim' : str(ssim_val),
         'hash' : str(hash_val),
         'hist' : str(hist_val),
@@ -186,7 +183,6 @@ def image_compare_server(firstData, secondData):
 
     first_object = firstData['object'][0]
     first_object_name = first_object['object_name']
-    first_data = first_object['processing_idx'] + '.jpg'
     first_indentificator = first_object['identificator'] + '.jpg'
     first_feature_base64_string = first_object['feature']
     first_feature_base64_bytes = first_feature_base64_string.encode('utf-8')
@@ -196,7 +192,6 @@ def image_compare_server(firstData, secondData):
 
     second_object = secondData['object'][0]
     second_object_name = second_object['object_name']
-    second_data = second_object['processing_idx'] + '.jpg'
     second_indentificator = second_object['identificator'] + '.jpg'
     second_feature_base64_string = second_object['feature']
     second_feature_base64_bytes = second_feature_base64_string.encode('utf-8')
@@ -272,7 +267,6 @@ def image_similar_server(firstData, secondData):
     else:
         first_object = firstData['object'][0]
         first_object_name = first_object['object_name']
-        first_data = first_object['processing_idx'] + '.jpg'
         first_indentificator = first_object['identificator'] + '.jpg'
         first_feature_base64_string = first_object['feature']
         first_feature_base64_bytes = first_feature_base64_string.encode('utf-8')
@@ -282,7 +276,6 @@ def image_similar_server(firstData, secondData):
 
         second_object = secondData['object'][0]
         second_object_name = second_object['object_name']
-        second_data = second_object['processing_idx'] + '.jpg'
         second_indentificator = second_object['identificator'] + '.jpg'
         second_feature_base64_string = second_object['feature']
         second_feature_base64_bytes = second_feature_base64_string.encode('utf-8')
