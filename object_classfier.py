@@ -451,7 +451,6 @@ def cropImage(strImagePath):
     cv2.imwrite(strObjectImagePath, object_image)
     
     #gs_url = upload_gcloud_storage(strObjectImagePath)
-    os.remove(strImagePath)
     return (object_name, strObjectImagePath)
 
 def getCropImage(strImagePath):
@@ -465,13 +464,12 @@ def getCropImage(strImagePath):
 
     base64_bytes = base64.b64encode(byte_content)
     base64_string = base64_bytes.decode('utf-8')
-    os.remove(image_path)
 
     data = {}
     data['crop_image'] = []
     data['crop_image'].append({
         'crop_data': base64_string,
-        'object_name' : object_name
+        'object_name' : str(object_name)
     })
 
     data['version'] = []

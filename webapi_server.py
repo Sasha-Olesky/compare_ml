@@ -29,7 +29,6 @@ def crop():
     try:
         json_data, json_file = getCropImage(image_name)
         os.remove(json_file)
-        os.remove(image_name)
     except:
         return error_message('Could not crop image ' + image_name), 500
 
