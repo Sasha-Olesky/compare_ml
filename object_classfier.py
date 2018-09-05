@@ -450,9 +450,9 @@ def cropImage(strImagePath):
     strObjectImagePath = os.path.basename(cropfilename) + '_crop.jpg'
     cv2.imwrite(strObjectImagePath, object_image)
     
-    gs_url = upload_gcloud_storage(strObjectImagePath)
-    os.remove(strObjectImagePath)
-    return (object_name, gs_url)
+    #gs_url = upload_gcloud_storage(strObjectImagePath)
+    os.remove(strImagePath)
+    return (object_name, strObjectImagePath)
 
 def getCropImage(strImagePath):
     full_path = os.path.splitext(strImagePath)[0]
@@ -460,11 +460,17 @@ def getCropImage(strImagePath):
     jsonfile = file_name + '_crop.json'
 
     object_name, image_path = cropImage(strImagePath)
+    with open(image_path, 'rb') as open_file:
+        byte_content = open_file.read()
+
+    base64_bytes = base64.b64encode(byte_content)
+    base64_string = base64_bytes.decode('utf-8')
+    os.remove(image_path)
 
     data = {}
     data['crop_image'] = []
     data['crop_image'].append({
-        'image_path': str(image_path)
+        'crop_data': base64_string
     })
 
     data['version'] = []
