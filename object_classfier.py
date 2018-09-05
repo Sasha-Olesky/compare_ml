@@ -470,7 +470,8 @@ def getCropImage(strImagePath):
     data = {}
     data['crop_image'] = []
     data['crop_image'].append({
-        'crop_data': base64_string
+        'crop_data': base64_string,
+        'object_name' : object_name
     })
 
     data['version'] = []
