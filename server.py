@@ -88,14 +88,19 @@ def make_message(action, m):
 
 def do_upload(data):
     try:
-        image_data = data['image_data']
+        image_url = data['image_url']
         identificator = data['identificator']
-        image_name = identificator + '.jpg'
 
-        image_base64_bytes = image_data.encode('utf-8')
-        image_decode_bytes = base64.b64decode(image_base64_bytes)
-        image = open(image_name, 'wb')
-        image.write(image_decode_bytes)
+        file_name = image_url.split('/')[-1]
+        file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name) + '.jpg'
+
+        print('Downloading from {}'.format(image_url) + ' to {}'.format(file_name))
+        request = Request(image_url, headers={'User-Agent': 'Mozilla/5.0'})
+        response = urlopen(request)
+        f = open(file_name, 'wb')
+        content = response.read()
+        f.write(content)
+        f.close()
     except:
         m = 'Not found image file from the Image Data.'
         print(m)
@@ -104,8 +109,8 @@ def do_upload(data):
         return False
 
     try:        
-        json_data, json_file = getJsonData(image_name, identificator)
-        os.remove(image_name)
+        json_data, json_file = getJsonData(file_name, identificator)
+        os.remove(file_name)
         os.remove(json_file)
 
         publish_messages(json.dumps(json_data))
