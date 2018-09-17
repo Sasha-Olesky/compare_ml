@@ -4,6 +4,7 @@ import re
 from urllib.request import Request, urlopen
 from google.cloud import pubsub_v1
 from object_classfier import *
+from datetime import datetime
 
 PROJECT = os.environ.get('PROJECT') or 'audotto'
 TOPIC = os.environ.get('TOPIC') or 'ImageML-responses'
@@ -79,11 +80,18 @@ def garbage_messages():
             MESSAGES.remove(msg)
             print('Removed message: {}'.format(msg))
 
-def make_message(action, m):
+def pubsub_error_message(identificator, text):
     msg = {}
-    msg['error'] = {}
-    msg['error']['action'] = action
-    msg['error']['message'] = m
+    msg['version'] = {}
+    msg['version']['version'] = APP_VERSION
+    msg['version']['Name'] = APP_NAME
+    msg['object'] = {}
+    msg['object']['identificator'] = identificator
+    msg['object']['error'] = text
+
+    ts = time.time()
+    msg['object']['timestamp'] = datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
     return msg
 
 def do_upload(data):
@@ -102,13 +110,13 @@ def do_upload(data):
         f.write(content)
         f.close()
     except:
-        m = 'Not found image file from the Image Data.'
-        print(m)
-        msg = make_message(ACTION_UPLOAD, m)
+        text = 'Not found image file from the {}'.format(image_url)
+        print(text)
+        msg = pubsub_error_message(identificator, text)
         publish_messages(json.dumps(msg))
         return False
 
-    try:        
+    try:
         json_data, json_file = getJsonData(file_name, identificator)
         os.remove(file_name)
         os.remove(json_file)
@@ -116,9 +124,9 @@ def do_upload(data):
         publish_messages(json.dumps(json_data))
         return True
     except:
-        m = 'Could not get the json data.'
-        print(m)
-        msg = make_message(ACTION_UPLOAD, m)
+        text = 'Could not get the json data for {}'.format(image_url)
+        print(text)
+        msg = pubsub_error_message(identificator, text)
         publish_messages(json.dumps(msg))
         return False
     

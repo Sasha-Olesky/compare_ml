@@ -38,3 +38,4 @@ while True:
     doQuit = input()
     if doQuit == 'q':
         break
+

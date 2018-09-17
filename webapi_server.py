@@ -1,15 +1,24 @@
 import re
+import time
 
 from urllib.request import Request, urlopen
 from flask import Flask, request
 from object_classfier import *
+from datetime import datetime
 
 app = Flask(__name__)
 
 def error_message(text):
     msg = {}
-    msg['status'] = 'error'
-    msg['data'] = text
+    msg['version'] = {}
+    msg['version']['version'] = APP_VERSION
+    msg['version']['Name'] = APP_NAME
+    msg['object'] = {}
+    msg['object']['error'] = text
+
+    ts = time.time()
+    msg['object']['timestamp'] = datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
     return json.dumps(msg)
 
 
