@@ -16,6 +16,7 @@ STATUS_UP = 'UP'
 STATUS_DOWN = 'DOWN'
 
 SUBSCRIBE_INTERVAL = 5
+MAX_FILENAME_LEN = 60
 MESSAGES = []
 
 def publish_messages(message):
@@ -100,6 +101,7 @@ def do_upload(data):
         identificator = data['identificator']
 
         file_name = image_url.split('/')[-1]
+        file_name = file_name[0:MAX_FILENAME_LEN]
         file_name = re.sub(r"[~!@#$%^&*()]", "_", file_name) + '.jpg'
 
         print('Downloading from {}'.format(image_url) + ' to {}'.format(file_name))
