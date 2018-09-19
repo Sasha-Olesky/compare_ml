@@ -10,10 +10,10 @@ app = Flask(__name__)
 
 def error_message(text):
     msg = {}
-    msg['version'] = {}
+    msg['version'] = []
     msg['version']['version'] = APP_VERSION
     msg['version']['Name'] = APP_NAME
-    msg['object'] = {}
+    msg['object'] = []
     msg['object']['error'] = text
 
     ts = time.time()
