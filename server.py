@@ -83,10 +83,10 @@ def garbage_messages():
 
 def pubsub_error_message(identificator, text):
     msg = {}
-    msg['version'] = []
+    msg['version'] = {}
     msg['version']['version'] = APP_VERSION
     msg['version']['Name'] = APP_NAME
-    msg['object'] = []
+    msg['object'] = {}
     msg['object']['identificator'] = identificator
     msg['object']['error'] = text
 

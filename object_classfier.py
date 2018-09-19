@@ -104,7 +104,7 @@ def getJsonData(strImagePath, identificator):
     base64_string = base64_bytes.decode('utf-8')
 
     data = {}
-    data['object'] = []
+    data['object'] = {}
     data['object'].append({
         'object_name': str(object_name),
         'ssim' : str(ssim_val),
@@ -115,7 +115,7 @@ def getJsonData(strImagePath, identificator):
         'identificator' : identificator
     })
 
-    data['version'] = []
+    data['version'] = {}
     data['version'].append({
         'Name': APP_NAME,
         'version': str(APP_VERSION)
@@ -208,13 +208,13 @@ def image_compare_server(firstData, secondData):
 
 def createCompareJson(code, detail):
     data = {}
-    data['result'] = []
+    data['result'] = {}
     data['result'].append({
         'result_code': str(code),
         'detail': detail
     })
 
-    data['version'] = []
+    data['version'] = {}
     data['version'].append({
         'Name': APP_NAME,
         'version': str(APP_VERSION)
@@ -286,12 +286,12 @@ def image_similar_server(firstData, secondData):
         similar = image_similar(first_indentificator, second_indentificator, first_object_name, second_object_name)
 
     data = {}
-    data['result'] = []
+    data['result'] = {}
     data['result'].append({
         'Similarity': str(similar)
     })
 
-    data['version'] = []
+    data['version'] = {}
     data['version'].append({
         'Name': APP_NAME,
         'version': str(APP_VERSION)
@@ -466,13 +466,13 @@ def getCropImage(strImagePath):
     base64_string = base64_bytes.decode('utf-8')
 
     data = {}
-    data['crop_image'] = []
+    data['crop_image'] = {}
     data['crop_image'].append({
         'crop_data': base64_string,
         'object_name' : str(object_name)
     })
 
-    data['version'] = []
+    data['version'] = {}
     data['version'].append({
         'Name': APP_NAME,
         'version': str(APP_VERSION)
