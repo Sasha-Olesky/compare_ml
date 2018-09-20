@@ -59,12 +59,12 @@ def process_messages():
             continue
 		
         if 'action' in msg:
-            action = msg['action']
+            action = msg.get('action')
         else:
             return False
 
         if 'data' in msg:
-            data = msg['data']
+            data = msg.get('data')
         else:
             return False
 
@@ -97,10 +97,13 @@ def pubsub_error_message(identificator, text):
 
 def do_upload(data):
     try:
-        image_url = data['image_url']
+        image_url = data.get('image_url')
+        if image_url is None:
+            image_url = 'Unknown URL'
+
         identificator = data.get('identificator')
         if identificator is None:
-            identificator = "Unknown"
+            identificator = 'Unknown'
 
         file_name = image_url.split('/')[-1]
         file_name = file_name[0:MAX_FILENAME_LEN]
