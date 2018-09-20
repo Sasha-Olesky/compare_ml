@@ -98,7 +98,9 @@ def pubsub_error_message(identificator, text):
 def do_upload(data):
     try:
         image_url = data['image_url']
-        identificator = data['identificator']
+        identificator = data.get('identificator')
+        if identificator is None:
+            identificator = "Unknown"
 
         file_name = image_url.split('/')[-1]
         file_name = file_name[0:MAX_FILENAME_LEN]
@@ -113,8 +115,8 @@ def do_upload(data):
         f.close()
     except:
         text = 'Not found image file from the {}'.format(image_url)
-        print(text)
         msg = pubsub_error_message(identificator, text)
+        print(msg)
         publish_messages(json.dumps(msg))
         return False
 
@@ -127,8 +129,8 @@ def do_upload(data):
         return True
     except:
         text = 'Could not get the json data for {}'.format(image_url)
-        print(text)
         msg = pubsub_error_message(identificator, text)
+        print(msg)
         publish_messages(json.dumps(msg))
         return False
     
