@@ -1,5 +1,7 @@
 import time
 import re
+import traceback
+from time import sleep
 
 from urllib.request import Request, urlopen
 from google.cloud import pubsub_v1
@@ -11,13 +13,12 @@ TOPIC = os.environ.get('TOPIC') or 'ImageML-responses'
 SUBSCRIPTION = os.environ.get('SUBSCRIPTION') or 'ImageML-srv'
 
 ACTION_UPLOAD = 'upload'
-STATUS_INIT = 'INIT'
-STATUS_UP = 'UP'
-STATUS_DOWN = 'DOWN'
 
 SUBSCRIBE_INTERVAL = 5
 MAX_FILENAME_LEN = 60
 MESSAGES = []
+IMAGE_NUMBER = 0
+
 
 def publish_messages(message):
     """Publishes multiple messages to a Pub/Sub topic."""
@@ -28,58 +29,43 @@ def publish_messages(message):
     message = message.encode('utf-8')
     publisher.publish(topic_path, data=message)
 
-    # print('Published messages.\n\t{}\n'.format(message))
+    print('Message published\n')
 
-def receive_messages():
-    """Receives messages from a pull subscription."""
 
+def pull_message_one_by_one():
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(
         PROJECT, SUBSCRIPTION)
-
-    def callback(message):
-        msg = json.loads(message.data.decode('utf-8'))
-        msg['status'] = STATUS_INIT
-        print('Received message: {}'.format(msg))
-        MESSAGES.append(msg)
-        message.ack()
-
-    subscriber.subscribe(subscription_path, callback=callback)
-    print('Subscribed to {}, project: {}'.format(PROJECT, SUBSCRIPTION))
-    
-    print('Listening for messages on {}'.format(subscription_path))
+    max_messages = 4
     while True:
-        process_messages()
-        garbage_messages()
-        time.sleep(SUBSCRIBE_INTERVAL)
+        ack_ids = []  # clear ack list
+        response = subscriber.pull(subscription_path, max_messages, return_immediately=False)
 
-def process_messages():
-    for msg in MESSAGES:
-        if msg['status'] == STATUS_UP:
+        if len(response.received_messages) == 0:
+            print("there are no messages now. Sleeping...")
+            sleep(10)
             continue
-		
-        if 'action' in msg:
-            action = msg.get('action')
-        else:
-            return False
 
-        if 'data' in msg:
-            data = msg.get('data')
-        else:
-            return False
+        for rsp in response.received_messages:
+            ack_ids.append(rsp.ack_id)
+            msg = json.loads(rsp.message.data.decode('utf-8'))
 
-        msg['status'] = STATUS_UP
-        
-        if action == ACTION_UPLOAD:
-            do_upload(data)
-        
-        msg['status'] = STATUS_DOWN
+            if not 'data' in msg:
+                print('no "data" field inside message')
+                continue
 
-def garbage_messages():
-    for msg in MESSAGES:
-        if msg['status'] == STATUS_DOWN:
-            MESSAGES.remove(msg)
-            print('Removed message: {}'.format(msg))
+            if not 'action' in msg and msg.get('action') != ACTION_UPLOAD:
+                print('no action inside message')
+                continue
+            try:
+                do_upload(msg.get('data'))
+            except Exception:
+                # TODO: add to nack()
+                print(traceback.format_exc())
+
+        print('sending ack ids')
+        subscriber.acknowledge(subscription_path, ack_ids)
+
 
 def pubsub_error_message(identificator, text):
     msg = {}
@@ -95,15 +81,16 @@ def pubsub_error_message(identificator, text):
 
     return msg
 
+
 def do_upload(data):
     try:
+        identificator = data.get('identificator')
+        if identificator is None:
+            identificator = "Unknown"
+
         image_url = data.get('image_url')
         if image_url is None:
             image_url = 'Unknown URL'
-
-        identificator = data.get('identificator')
-        if identificator is None:
-            identificator = 'Unknown'
 
         file_name = image_url.split('/')[-1]
         file_name = file_name[0:MAX_FILENAME_LEN]
@@ -136,7 +123,8 @@ def do_upload(data):
         print(msg)
         publish_messages(json.dumps(msg))
         return False
-    
+
+
 if __name__ == '__main__':
     print('Starting...')
-    receive_messages()
+    pull_message_one_by_one()
